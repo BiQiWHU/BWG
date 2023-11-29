@@ -1,6 +1,6 @@
 # CMFormer: Learning Content-enhanced Mask Transformer for Domain Generalized Urban-scene Segmentation
 
-This is the official implementation of our work entitled as Learning Content-enhanced Mask Transformer for Domain Generalized Urban-scene Segmentation.
+This is the official implementation of our work entitled as ```Learning Content-enhanced Mask Transformer for Domain Generalized Urban-scene Segmentation```.
 
 ## License
 
