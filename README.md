@@ -3,8 +3,6 @@
 
 ## License
 
-Shield: [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-
 The majority of Mask2Former is licensed under a [MIT License](LICENSE).
 
 
