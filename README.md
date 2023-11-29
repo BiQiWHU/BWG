@@ -2,12 +2,13 @@
 
 This is the official implementation of our work entitled as ```Learning Content-enhanced Mask Transformer for Domain Generalized Urban-scene Segmentation```.
 
-## License
+## Methodology Overview
 
-The majority of Mask2Former is licensed under a [MIT License](LICENSE).
+## Environment Configuration
 
+## Training on Source Domain
 
-However portions of the project are available under separate license terms: Swin-Transformer-Semantic-Segmentation is licensed under the [MIT license](https://github.com/SwinTransformer/Swin-Transformer-Semantic-Segmentation/blob/main/LICENSE), Deformable-DETR is licensed under the [Apache-2.0 License](https://github.com/fundamentalvision/Deformable-DETR/blob/main/LICENSE).
+## Inference on Unseen Target Domains
 
 ## Cite the proposed CMFormer
 
@@ -25,6 +26,10 @@ If you find the proposed CMFormer is useful for domain-generalized urban-scene s
 ## Acknowledgement
 
 The development of CMFormer is largely based on Mask2Former [https://bowenc0221.github.io/mask2former/].
+
+The majority of Mask2Former is licensed under a [MIT License](LICENSE).
+
+However portions of the project are available under separate license terms: Swin-Transformer-Semantic-Segmentation is licensed under the [MIT license](https://github.com/SwinTransformer/Swin-Transformer-Semantic-Segmentation/blob/main/LICENSE), Deformable-DETR is licensed under the [Apache-2.0 License](https://github.com/fundamentalvision/Deformable-DETR/blob/main/LICENSE).
 
 If you find the proposed CMFormer is useful for domain-generalized urban-scene segmentation, please also cite the asserts from the orginal Mask2Former as follows:
 
