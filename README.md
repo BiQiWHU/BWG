@@ -1,44 +1,5 @@
-# Mask2Former: Masked-attention Mask Transformer for Universal Image Segmentation (CVPR 2022)
+# CMFormer: Content-enhanced Mask Transformer for Domain Generalized Urban-scene Semantic Segmentation
 
-[Bowen Cheng](https://bowenc0221.github.io/), [Ishan Misra](https://imisra.github.io/), [Alexander G. Schwing](https://alexander-schwing.de/), [Alexander Kirillov](https://alexander-kirillov.github.io/), [Rohit Girdhar](https://rohitgirdhar.github.io/)
-
-[[`arXiv`](https://arxiv.org/abs/2112.01527)] [[`Project`](https://bowenc0221.github.io/mask2former)] [[`BibTeX`](#CitingMask2Former)]
-
-<div align="center">
-  <img src="https://bowenc0221.github.io/images/maskformerv2_teaser.png" width="100%" height="100%"/>
-</div><br/>
-
-### Features
-* A single architecture for panoptic, instance and semantic segmentation.
-* Support major segmentation datasets: ADE20K, Cityscapes, COCO, Mapillary Vistas.
-
-## Updates
-* Add Google Colab demo.
-* Video instance segmentation is now supported! Please check our [tech report](https://arxiv.org/abs/2112.10764) for more details.
-
-## Installation
-
-See [installation instructions](INSTALL.md).
-
-## Getting Started
-
-See [Preparing Datasets for Mask2Former](datasets/README.md).
-
-See [Getting Started with Mask2Former](GETTING_STARTED.md).
-
-Run our demo using Colab: [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1uIWE5KbGFSjrxey2aRd5pWkKNY1_SaNq)
-
-Integrated into [Huggingface Spaces 🤗](https://huggingface.co/spaces) using [Gradio](https://github.com/gradio-app/gradio). Try out the Web Demo: [![Hugging Face Spaces](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Spaces-blue)](https://huggingface.co/spaces/akhaliq/Mask2Former)
-
-Replicate web demo and docker image is available here: [![Replicate](https://replicate.com/facebookresearch/mask2former/badge)](https://replicate.com/facebookresearch/mask2former)
-
-## Advanced usage
-
-See [Advanced Usage of Mask2Former](ADVANCED_USAGE.md).
-
-## Model Zoo and Baselines
-
-We provide a large set of baseline results and trained models available for download in the [Mask2Former Model Zoo](MODEL_ZOO.md).
 
 ## License
 
