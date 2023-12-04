@@ -41,17 +41,22 @@ An example of training on ```CityScapes``` source domain is given below.
 python train_net.py --num-gpus 2 --config-file configs/cityscapes/semantic-segmentation/swin/maskformer2_swin_base_IN21k_384_bs16_90k.yaml
 ```
 
-## Inference on Unseen Target Domains
+## Evaluating mIoU on Unseen Target Domains
 
-The below lines are the example code to infer on ```GTA``` and ```SYN``` unseen target domains.
+The below lines are the example code to infer on ```Foggy CityScapes``` and ```Foggy Zurich``` unseen target domains.
 ```
-python train_net.py --config-file configs/cityscapes/semantic-segmentation/swin/maskformer2_swin_base_IN21k_384_bs16_90k.yaml --eval-only MODEL.WEIGHTS E:/DGtask/DGViT/Mask2Former-main/output_gta/model_final.pth
+python train_net.py --config-file configs/cityscapes/semantic-segmentation/swin/maskformer2_swin_base_IN21k_384_bs16_90k.yaml --eval-only MODEL.WEIGHTS E:/DGtask/DGViT/Mask2Former-main/output_fc/model_final.pth
 ```
 ```
-python train_net.py --config-file configs/cityscapes/semantic-segmentation/swin/maskformer2_swin_base_IN21k_384_bs16_90k.yaml --eval-only MODEL.WEIGHTS E:/DGtask/DGViT/Mask2Former-main/output_syn/model_final.pth
+python train_net.py --config-file configs/cityscapes/semantic-segmentation/swin/maskformer2_swin_base_IN21k_384_bs16_90k.yaml --eval-only MODEL.WEIGHTS E:/DGtask/DGViT/Mask2Former-main/output_fz/model_final.pth
+```
+## Inferring predictions on Unseen Target Domains
+The below line is an example code to infer visual prediction results on unseen target domains.
+```
+python demo.py --config-file ../configs/cityscapes/semantic-segmentation/swin/maskformer2_swin_base_IN21k_384_bs16_90k.yaml --input citys_test --output inf --opts MODEL.WEIGHTS E:/DGtask/DGViT/Mask2Former-main/output_citys/model_final.pth
 ```
 
-## Cite the proposed CMFormer
+## Cite the proposed BWG
 
 If you find the proposed BWG is useful for your task please cite our work as follows:
 
@@ -61,13 +66,13 @@ If you find the proposed BWG is useful for your task please cite our work as fol
 
 ## Acknowledgement
 
-The development of CMFormer is largely based on Mask2Former [https://bowenc0221.github.io/mask2former/].
+The development of BWG is largely based on Mask2Former [https://bowenc0221.github.io/mask2former/].
 
 The majority of Mask2Former is licensed under a [MIT License](LICENSE).
 
 However portions of the project are available under separate license terms: Swin-Transformer-Semantic-Segmentation is licensed under the [MIT license](https://github.com/SwinTransformer/Swin-Transformer-Semantic-Segmentation/blob/main/LICENSE), Deformable-DETR is licensed under the [Apache-2.0 License](https://github.com/fundamentalvision/Deformable-DETR/blob/main/LICENSE).
 
-If you find the proposed CMFormer is useful for domain-generalized urban-scene segmentation, please also cite the asserts from the orginal Mask2Former as follows:
+If you find the proposed BWG is useful for domain-generalized urban-scene segmentation, please also cite the asserts from the orginal Mask2Former as follows:
 
 ```BibTeX
 @inproceedings{cheng2021mask2former,
