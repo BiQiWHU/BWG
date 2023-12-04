@@ -16,6 +16,62 @@ from .maskformer_transformer_decoder import TRANSFORMER_DECODER_REGISTRY
 import numpy as np
 
 
+def get_wav(in_channels, pool=True):
+    """wavelet decomposition using conv2d"""
+    harr_wav_L = 1 / np.sqrt(2) * np.ones((1, 2))
+    harr_wav_H = 1 / np.sqrt(2) * np.ones((1, 2))
+    harr_wav_H[0, 0] = -1 * harr_wav_H[0, 0]
+
+    harr_wav_LL = np.transpose(harr_wav_L) * harr_wav_L
+    harr_wav_LH = np.transpose(harr_wav_L) * harr_wav_H
+    harr_wav_HL = np.transpose(harr_wav_H) * harr_wav_L
+    harr_wav_HH = np.transpose(harr_wav_H) * harr_wav_H
+
+    filter_LL = torch.from_numpy(harr_wav_LL).unsqueeze(0)
+    filter_LH = torch.from_numpy(harr_wav_LH).unsqueeze(0)
+    filter_HL = torch.from_numpy(harr_wav_HL).unsqueeze(0)
+    filter_HH = torch.from_numpy(harr_wav_HH).unsqueeze(0)
+
+    if pool:
+        net = nn.Conv2d
+    else:
+        net = nn.ConvTranspose2d
+
+    LL = net(in_channels, in_channels,
+             kernel_size=2, stride=2, padding=0, bias=False,
+             groups=in_channels)
+    LH = net(in_channels, in_channels,
+             kernel_size=2, stride=2, padding=0, bias=False,
+             groups=in_channels)
+    HL = net(in_channels, in_channels,
+             kernel_size=2, stride=2, padding=0, bias=False,
+             groups=in_channels)
+    HH = net(in_channels, in_channels,
+             kernel_size=2, stride=2, padding=0, bias=False,
+             groups=in_channels)
+
+    LL.weight.requires_grad = False
+    LH.weight.requires_grad = False
+    HL.weight.requires_grad = False
+    HH.weight.requires_grad = False
+
+    LL.weight.data = filter_LL.float().unsqueeze(0).expand(in_channels, -1, -1, -1).clone()
+    LH.weight.data = filter_LH.float().unsqueeze(0).expand(in_channels, -1, -1, -1).clone()
+    HL.weight.data = filter_HL.float().unsqueeze(0).expand(in_channels, -1, -1, -1).clone()
+    HH.weight.data = filter_HH.float().unsqueeze(0).expand(in_channels, -1, -1, -1).clone()
+
+    return LL, LH, HL, HH
+
+
+class WavePool(nn.Module):
+    def __init__(self, in_channels):
+        super(WavePool, self).__init__()
+        self.LL, self.LH, self.HL, self.HH = get_wav(in_channels)
+
+    def forward(self, x):
+        return self.LL(x), self.LH(x), self.HL(x), self.HH(x)
+
+
 class SelfAttentionLayer(nn.Module):
 
     def __init__(self, d_model, nhead, dropout=0.0,
@@ -26,8 +82,16 @@ class SelfAttentionLayer(nn.Module):
         # self.self_attn_hi = nn.MultiheadAttention(d_model, nhead // 2, dropout=dropout)
         # self.self_attn_lo = nn.MultiheadAttention(d_model // 4, nhead // 2, dropout=dropout)
         # hilo 1 
-        self.self_attn_hi = nn.MultiheadAttention(d_model, nhead, dropout=dropout)
-        self.self_attn_lo = nn.MultiheadAttention(d_model // 4, nhead, dropout=dropout)
+        # self.self_attn_hi = nn.MultiheadAttention(d_model, nhead, dropout=dropout)
+        # self.self_attn_lo = nn.MultiheadAttention(d_model // 4, nhead, dropout=dropout)
+        # hilo wavelet 1
+        self.self_attn_1 = nn.MultiheadAttention(d_model, nhead, dropout=dropout)
+        self.self_attn_2 = nn.MultiheadAttention(d_model, nhead, dropout=dropout)
+        self.self_attn_3 = nn.MultiheadAttention(d_model, nhead, dropout=dropout)
+        self.wavepool_1 = WavePool(1)
+        self.wavepool_2 = WavePool(1)
+        self.wavepool_3 = WavePool(1)
+        self.instance_norm = nn.InstanceNorm1d(256)
 
         self.norm = nn.LayerNorm(d_model)
         self.dropout = nn.Dropout(dropout)
@@ -35,11 +99,13 @@ class SelfAttentionLayer(nn.Module):
         self.activation = _get_activation_fn(activation)
         self.normalize_before = normalize_before
         
-        self.avgpool = nn.AvgPool2d(2, stride=2)
+        # self.avgpool = nn.AvgPool2d(2, stride=2)
         # hilo 0.5
         # self.concentrate_linear = nn.Linear(d_model+d_model//4, d_model)
         # hilo 1
-        self.concentrate_linear = nn.Linear(d_model+d_model//4, d_model)
+        # self.concentrate_linear = nn.Linear(d_model+d_model//4, d_model)
+        # hilo wavelet 1
+        # self.concentrate_linear = nn.Linear(d_model*3, d_model)
 
         self._reset_parameters()
     
@@ -75,26 +141,92 @@ class SelfAttentionLayer(nn.Module):
         
     #     return tgt
     
-    ### HiLo Self-Attention
+    # ### HiLo Self-Attention
+    # def forward_post(self, tgt,
+    #                  tgt_mask: Optional[Tensor] = None,
+    #                  tgt_key_padding_mask: Optional[Tensor] = None,
+    #                  query_pos: Optional[Tensor] = None):
+    #     # hight freq
+    #     q_hi = k_hi = self.with_pos_embed(tgt, query_pos)
+    #     v_hi = tgt
+    #     tgt2_hi = self.self_attn_hi(q_hi, k_hi, value=v_hi, attn_mask=tgt_mask,
+    #                           key_padding_mask=tgt_key_padding_mask)[0]
+    #     # low freq
+    #     B, N, C = tgt.shape
+    #     tgt_lo = self.avgpool(tgt.view((B, N, int(np.sqrt(C)), -1))).view((B, N, -1))
+    #     # q_lo = self.lo_linear(tgt)
+    #     q_lo = k_lo = self.with_pos_embed(tgt_lo, None)
+    #     v_lo = tgt_lo
+    #     tgt2_lo = self.self_attn_lo(q_lo, k_lo, value=v_lo, attn_mask=tgt_mask,
+    #                           key_padding_mask=tgt_key_padding_mask)[0]
+    #     tgt2 = torch.cat((tgt2_hi, tgt2_lo), -1)
+    #     tgt2 = self.concentrate_linear(tgt2)
+    #     tgt = tgt + self.dropout(tgt2)
+    #     tgt = self.norm(tgt)
+
+    #     return tgt
+
+    # def forward_pre(self, tgt,
+    #                 tgt_mask: Optional[Tensor] = None,
+    #                 tgt_key_padding_mask: Optional[Tensor] = None,
+    #                 query_pos: Optional[Tensor] = None):
+    #     tgt2 = self.norm(tgt)
+    #     # hight freq
+    #     q_hi = k_hi = self.with_pos_embed(tgt, query_pos)
+    #     v_hi = tgt
+    #     tgt2_hi = self.self_attn_hi(q_hi, k_hi, value=v_hi, attn_mask=tgt_mask,
+    #                           key_padding_mask=tgt_key_padding_mask)[0]
+    #     # low freq
+    #     B, N, C = tgt.shape
+    #     tgt_lo = self.avgpool(tgt.view((B, N, int(np.sqrt(C)), -1))).view((B, N, -1))
+    #     # q_lo = self.lo_linear(tgt)
+    #     q_lo = k_lo = self.with_pos_embed(tgt_lo, None)
+    #     v_lo = tgt_lo
+    #     tgt2_lo = self.self_attn_lo(q_lo, k_lo, value=v_lo, attn_mask=tgt_mask,
+    #                           key_padding_mask=tgt_key_padding_mask)[0]
+    #     tgt2 = torch.cat((tgt2_hi, tgt2_lo), -1)
+    #     tgt2 = self.concentrate_linear(tgt2)
+    #     tgt = tgt + self.dropout(tgt2)
+        
+    #     return tgt
+    # ### HiLo Self-Attention
+    
+    ### HiLo Wavelet Self-Attention
     def forward_post(self, tgt,
                      tgt_mask: Optional[Tensor] = None,
                      tgt_key_padding_mask: Optional[Tensor] = None,
                      query_pos: Optional[Tensor] = None):
-        # hight freq
-        q_hi = k_hi = self.with_pos_embed(tgt, query_pos)
-        v_hi = tgt
-        tgt2_hi = self.self_attn_hi(q_hi, k_hi, value=v_hi, attn_mask=tgt_mask,
-                              key_padding_mask=tgt_key_padding_mask)[0]
-        # low freq
+
+        q = k = self.with_pos_embed(tgt, query_pos)
+        v = tgt
         B, N, C = tgt.shape
-        tgt_lo = self.avgpool(tgt.view((B, N, int(np.sqrt(C)), -1))).view((B, N, -1))
-        # q_lo = self.lo_linear(tgt)
-        q_lo = k_lo = self.with_pos_embed(tgt_lo, None)
-        v_lo = tgt_lo
-        tgt2_lo = self.self_attn_lo(q_lo, k_lo, value=v_lo, attn_mask=tgt_mask,
+        # tgt2 [100, 1, 256]
+        tgt2_1 = self.self_attn_1(q, k, value=v, attn_mask=tgt_mask,
                               key_padding_mask=tgt_key_padding_mask)[0]
-        tgt2 = torch.cat((tgt2_hi, tgt2_lo), -1)
-        tgt2 = self.concentrate_linear(tgt2)
+        tgt2_2 = self.self_attn_2(q, k, value=v, attn_mask=tgt_mask,
+                              key_padding_mask=tgt_key_padding_mask)[0]
+        tgt2_3 = self.self_attn_3(q, k, value=v, attn_mask=tgt_mask,
+                              key_padding_mask=tgt_key_padding_mask)[0]
+        hw = int(np.sqrt(C))
+        tgt2_1 = tgt2_1.reshape(B, N, hw, hw)
+        tgt2_2 = tgt2_2.reshape(B, N, hw, hw)
+        tgt2_3 = tgt2_3.reshape(B, N, hw, hw)
+        ll_1, lh_1, hl_1, hh_1 = self.wavepool_1(tgt2_1)
+        ll_2, lh_2, hl_2, hh_2 = self.wavepool_2(tgt2_2)
+        ll_3, lh_3, hl_3, hh_3 = self.wavepool_3(tgt2_3)
+        c = int(C / 4)
+        ll_1, lh_1, hl_1, hh_1 = ll_1.reshape(B, N, c), lh_1.reshape(B, N, c), hl_1.reshape(B, N, c), hh_1.reshape(B, N, c)
+        ll_2, lh_2, hl_2, hh_2 = ll_2.reshape(B, N, c), lh_2.reshape(B, N, c), hl_2.reshape(B, N, c), hh_2.reshape(B, N, c)
+        ll_3, lh_3, hl_3, hh_3 = ll_3.reshape(B, N, c), lh_3.reshape(B, N, c), hl_3.reshape(B, N, c), hh_3.reshape(B, N, c)
+        # out_2 = (ll_1 + ll_2 + ll_3) / 3
+        # out_1 = (lh_1 + hl_1 + hh_1 + lh_2 + hl_2 + hh_2) / 6
+        # out_3 = (lh_1 + hl_1 + hh_1 + lh_3 + hl_3 + hh_3) / 6
+        out_1 = torch.cat((lh_1, hl_1, hh_1, (lh_2 + hl_2 + hh_2) / 3), -1)
+        out_2 = torch.cat((ll_2, ll_2, ll_1, ll_3), -1)
+        out_3 = torch.cat((lh_3, hl_3, hh_3, (lh_2 + hl_2 + hh_2) / 3), -1)
+        out_1 = self.instance_norm(out_1)
+        out_3 = self.instance_norm(out_3)
+        tgt2 = (out_1 + out_2 + out_3) / 3
         tgt = tgt + self.dropout(tgt2)
         tgt = self.norm(tgt)
 
@@ -105,25 +237,40 @@ class SelfAttentionLayer(nn.Module):
                     tgt_key_padding_mask: Optional[Tensor] = None,
                     query_pos: Optional[Tensor] = None):
         tgt2 = self.norm(tgt)
-        # hight freq
-        q_hi = k_hi = self.with_pos_embed(tgt, query_pos)
-        v_hi = tgt
-        tgt2_hi = self.self_attn_hi(q_hi, k_hi, value=v_hi, attn_mask=tgt_mask,
-                              key_padding_mask=tgt_key_padding_mask)[0]
-        # low freq
+        q = k = self.with_pos_embed(tgt, query_pos)
+        v = tgt
         B, N, C = tgt.shape
-        tgt_lo = self.avgpool(tgt.view((B, N, int(np.sqrt(C)), -1))).view((B, N, -1))
-        # q_lo = self.lo_linear(tgt)
-        q_lo = k_lo = self.with_pos_embed(tgt_lo, None)
-        v_lo = tgt_lo
-        tgt2_lo = self.self_attn_lo(q_lo, k_lo, value=v_lo, attn_mask=tgt_mask,
+        # tgt2 [100, 1, 256]
+        tgt2_1 = self.self_attn_1(q, k, value=v, attn_mask=tgt_mask,
                               key_padding_mask=tgt_key_padding_mask)[0]
-        tgt2 = torch.cat((tgt2_hi, tgt2_lo), -1)
-        tgt2 = self.concentrate_linear(tgt2)
+        tgt2_2 = self.self_attn_2(q, k, value=v, attn_mask=tgt_mask,
+                              key_padding_mask=tgt_key_padding_mask)[0]
+        tgt2_3 = self.self_attn_3(q, k, value=v, attn_mask=tgt_mask,
+                              key_padding_mask=tgt_key_padding_mask)[0]
+        hw = int(np.sqrt(C))
+        tgt2_1 = tgt2_1.reshape(B, N, hw, hw)
+        tgt2_2 = tgt2_2.reshape(B, N, hw, hw)
+        tgt2_3 = tgt2_3.reshape(B, N, hw, hw)
+        ll_1, lh_1, hl_1, hh_1 = self.wavepool_1(tgt2_1)
+        ll_2, lh_2, hl_2, hh_2 = self.wavepool_2(tgt2_2)
+        ll_3, lh_3, hl_3, hh_3 = self.wavepool_3(tgt2_3)
+        c = int(C / 4)
+        ll_1, lh_1, hl_1, hh_1 = ll_1.reshape(B, N, c), lh_1.reshape(B, N, c), hl_1.reshape(B, N, c), hh_1.reshape(B, N, c)
+        ll_2, lh_2, hl_2, hh_2 = ll_2.reshape(B, N, c), lh_2.reshape(B, N, c), hl_2.reshape(B, N, c), hh_2.reshape(B, N, c)
+        ll_3, lh_3, hl_3, hh_3 = ll_3.reshape(B, N, c), lh_3.reshape(B, N, c), hl_3.reshape(B, N, c), hh_3.reshape(B, N, c)
+        # out_2 = (ll_1 + ll_2 + ll_3) / 3
+        # out_1 = (lh_1 + hl_1 + hh_1 + lh_2 + hl_2 + hh_2) / 6
+        # out_3 = (lh_1 + hl_1 + hh_1 + lh_3 + hl_3 + hh_3) / 6
+        out_1 = torch.cat((lh_1, hl_1, hh_1, (lh_2 + hl_2 + hh_2) / 3), -1)
+        out_2 = torch.cat((ll_2, ll_2, ll_1, ll_3), -1)
+        out_3 = torch.cat((lh_3, hl_3, hh_3, (lh_2 + hl_2 + hh_2) / 3), -1)
+        out_1 = self.instance_norm(out_1)
+        out_3 = self.instance_norm(out_3)
+        tgt2 = (out_1 + out_2 + out_3) / 3
         tgt = tgt + self.dropout(tgt2)
         
         return tgt
-    ### HiLo Self-Attention
+    ### HiLo Wavelet Self-Attention
 
     def forward(self, tgt,
                 tgt_mask: Optional[Tensor] = None,
@@ -344,7 +491,7 @@ class MultiScaleMaskedTransformerDecoder(nn.Module):
         self.transformer_self_attention_layers = nn.ModuleList()
         self.transformer_cross_attention_layers = nn.ModuleList()
         self.transformer_ffn_layers = nn.ModuleList()
-
+       
         for _ in range(self.num_layers):
             self.transformer_self_attention_layers.append(
                 SelfAttentionLayer(
@@ -363,7 +510,7 @@ class MultiScaleMaskedTransformerDecoder(nn.Module):
                     normalize_before=pre_norm,
                 )
             )
-
+            
             self.transformer_ffn_layers.append(
                 FFNLayer(
                     d_model=hidden_dim,
@@ -467,7 +614,7 @@ class MultiScaleMaskedTransformerDecoder(nn.Module):
                 memory_key_padding_mask=None,  # here we do not apply masking on padded region
                 pos=pos[level_index], query_pos=query_embed
             )
-
+    
             output = self.transformer_self_attention_layers[i](
                 output, tgt_mask=None,
                 tgt_key_padding_mask=None,
