@@ -15,6 +15,8 @@ With the aid of Haar wavelet transformation,
 the low frequency component is concentrated on the content enhancement self-attention, while the high frequency components are shifted to the style and fog self-attention for de-correlation purpose.
 It is integrated into existing mask-level Transformer segmentation pipelines in a learnable fashion.
 
+![avatar](/BWG.png)
+
 ## Environment Configuration
 The development of ```BWG``` is largely based on Mask2Former [https://bowenc0221.github.io/mask2former/].
 
