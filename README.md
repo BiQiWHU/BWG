@@ -10,23 +10,28 @@ Unfortunately, these methods can only generalize to the target foggy domain that
 
 In this paper, we propose to learn scene segmentation well generalized to foggy-scenes under the domain generalization setting, which does not involve any foggy images in the training stage and can generalize to any arbitrary unseen foggy scenes. 
 We argue that an ideal segmentation model that can be well generalized to foggy-scenes need to simultaneously enhance the content, de-correlate the urban-scene style and de-correlate the fog style. 
-As the content (e.g., scene semantics) rest more in low-frequency features while the style of urban-scene and fog rest more in high-frequency features, we propose a novel bi-directional wavelet guidance (BWG) mechanism to realize the above three objectives in a divide-and-conquer manner. 
+As the content (e.g., scene semantics) rest more in low-frequency features while the style of urban-scene and fog rest more in high-frequency features, we propose a novel ```bi-directional wavelet guidance``` (BWG) mechanism to realize the above three objectives in a divide-and-conquer manner. 
 With the aid of Haar wavelet transformation,
 the low frequency component is concentrated on the content enhancement self-attention, while the high frequency components are shifted to the style and fog self-attention for de-correlation purpose.
 It is integrated into existing mask-level Transformer segmentation pipelines in a learnable fashion.
 
 ## Environment Configuration
-The development of CMFormer is largely based on Mask2Former [https://bowenc0221.github.io/mask2former/].
+The development of ```BWG``` is largely based on Mask2Former [https://bowenc0221.github.io/mask2former/].
 
 ```Detectron2``` and ```PyTorch``` are required. Other packages include:
 ```
-cython
-scipy
-shapely
-timm
-h5py
-submitit
-scikit-image
+    ipython==7.30.1
+    numpy==1.21.4
+    torch==1.8.1
+    torchvision==0.9.1
+    opencv-python==4.5.5.62
+    Shapely==1.8.0
+    h5py==3.6.0
+    scipy==1.7.3
+    submitit==1.4.1
+    scikit-image==0.19.1
+    Cython==0.29.27
+    timm==0.4.12
 ```
 
 ## Training on Source Domain
@@ -48,15 +53,10 @@ python train_net.py --config-file configs/cityscapes/semantic-segmentation/swin/
 
 ## Cite the proposed CMFormer
 
-If you find the proposed CMFormer is useful for domain-generalized urban-scene segmentation, please cite our work as follows:
+If you find the proposed BWG is useful for your task please cite our work as follows:
 
 ```BibTeX
-@article{bi2023learning,
-  title={Learning Content-enhanced Mask Transformer for Domain Generalized Urban-Scene Segmentation},
-  author={Bi, Qi and You, Shaodi and Gevers, Theo},
-  journal={arXiv preprint arXiv:2307.00371},
-  year={2023}
-}
+
 ```
 
 ## Acknowledgement
