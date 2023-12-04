@@ -4,10 +4,16 @@ This is the official implementation of our work entitled as ```Learning Generali
 
 ## Methodology Overview
 
-Recent work has shown that mask-level segmentation Transformer (e.g., Mask2Former) is a scalable learner for domain generalized semantic segmentation. Unfortunately, we empirically observed that, a mask-level representation is better at representing content but more sensitive to style variations; its low-resolution counterpart on the contrary is less capable to represent content but more robust to the style variations.
+Learning scene semantics that can be well generalized to foggy conditions is important for safety-crucial applications such as autonomous driving. 
+Existing methods need both annotated clear images and foggy images to train a curriculum domain adaptation model.
+Unfortunately, these methods can only generalize to the target foggy domain that has seen in the training stage, but the foggy domains vary a lot in both urban-scene styles and fog styles.
 
-Overall, the mask representation and its down-sampled counterpart shows complementary properties when handling samples from different domains. Thus, it is natural to jointly
-leverage both mask representation and its down-sampled counterparts, so as to at the same time stabilizing the content and be insensitive to the style variation.
+In this paper, we propose to learn scene segmentation well generalized to foggy-scenes under the domain generalization setting, which does not involve any foggy images in the training stage and can generalize to any arbitrary unseen foggy scenes. 
+We argue that an ideal segmentation model that can be well generalized to foggy-scenes need to simultaneously enhance the content, de-correlate the urban-scene style and de-correlate the fog style. 
+As the content (e.g., scene semantics) rest more in low-frequency features while the style of urban-scene and fog rest more in high-frequency features, we propose a novel bi-directional wavelet guidance (BWG) mechanism to realize the above three objectives in a divide-and-conquer manner. 
+With the aid of Haar wavelet transformation,
+the low frequency component is concentrated on the content enhancement self-attention, while the high frequency components are shifted to the style and fog self-attention for de-correlation purpose.
+It is integrated into existing mask-level Transformer segmentation pipelines in a learnable fashion.
 
 ## Environment Configuration
 The development of CMFormer is largely based on Mask2Former [https://bowenc0221.github.io/mask2former/].
