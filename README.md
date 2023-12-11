@@ -1,6 +1,6 @@
 # BWG: Learning Generalized Segmentation for Foggy-scenes by Bi-directional Wavelet Guidance
 
-This is the official implementation of our work entitled as ```Learning Generalized Segmentation for Foggy-scenes by Bi-directional Wavelet Guidance```.
+This is the official implementation of our work entitled as ```Learning Generalized Segmentation for Foggy-scenes by Bi-directional Wavelet Guidance```, which has been accepted by ```AAAI 2024```.
 
 ## Methodology Overview
 
@@ -63,7 +63,12 @@ python demo.py --config-file ../configs/cityscapes/semantic-segmentation/swin/ma
 If you find the proposed BWG is useful for your task please cite our work as follows:
 
 ```BibTeX
-
+@inproceedings{bi2024learning,
+  title={Learning Generalized Segmentation for Foggy-scenes by Bi-directional Wavelet Guidance},
+  author={Bi, Qi and You, Shaodi and Gevers, Theo},
+  journal={AAAI},
+  year={2024}
+}
 ```
 
 ## Acknowledgement
