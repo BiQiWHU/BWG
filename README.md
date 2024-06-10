@@ -79,7 +79,7 @@ The majority of Mask2Former is licensed under a [MIT License](LICENSE).
 
 However portions of the project are available under separate license terms: Swin-Transformer-Semantic-Segmentation is licensed under the [MIT license](https://github.com/SwinTransformer/Swin-Transformer-Semantic-Segmentation/blob/main/LICENSE), Deformable-DETR is licensed under the [Apache-2.0 License](https://github.com/fundamentalvision/Deformable-DETR/blob/main/LICENSE).
 
-If you find the proposed BWG is useful for domain-generalized urban-scene segmentation, please also cite the asserts from the orginal Mask2Former as follows:
+If you find the proposed BWG is useful for foggy scene semantic segmentation, please also cite the asserts from the orginal Mask2Former as follows:
 
 ```BibTeX
 @inproceedings{cheng2021mask2former,
