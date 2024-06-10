@@ -64,9 +64,12 @@ If you find the proposed BWG is useful for your task please cite our work as fol
 
 ```BibTeX
 @inproceedings{bi2024learning,
-  title={Learning Generalized Segmentation for Foggy-scenes by Bi-directional Wavelet Guidance},
+  title={Learning Generalized Segmentation for Foggy-Scenes by Bi-directional Wavelet Guidance},
   author={Bi, Qi and You, Shaodi and Gevers, Theo},
-  journal={AAAI},
+  booktitle={Proceedings of the AAAI Conference on Artificial Intelligence},
+  volume={38},
+  number={2},
+  pages={801--809},
   year={2024}
 }
 ```
